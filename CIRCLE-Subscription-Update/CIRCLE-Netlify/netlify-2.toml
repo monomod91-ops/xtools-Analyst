@@ -1,0 +1,29 @@
+[build]
+  # This file belongs at CIRCLE-Subscription-Update/CIRCLE-Netlify/netlify.toml.
+  # Apply the reviewed OAuth files uploaded below this active base directory.
+  # Maintain the copies in CIRCLE-X-OAuth-Diagnostics until they are moved to
+  # their canonical paths, then restore command = "npm run build" here.
+  command = '''
+set -eu
+for circle_patch_file in server/core.mjs server/handler.mjs server/oauth-result.mjs netlify/functions/x.mjs public/assets/circle-app.js tests/core.test.mjs tests/oauth-result.test.mjs; do
+  test -f "CIRCLE-X-OAuth-Diagnostics/$circle_patch_file"
+done
+for circle_patch_file in server/core.mjs server/handler.mjs server/oauth-result.mjs netlify/functions/x.mjs public/assets/circle-app.js tests/core.test.mjs tests/oauth-result.test.mjs; do
+  cp "CIRCLE-X-OAuth-Diagnostics/$circle_patch_file" "$circle_patch_file"
+done
+npm run build
+'''
+  publish = "public"
+  functions = "netlify/functions"
+[build.environment]
+  NODE_VERSION = "22"
+[functions]
+  node_bundler = "esbuild"
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "no-referrer"
+    X-Frame-Options = "DENY"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' https://js.stripe.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://pbs.twimg.com; font-src 'self' data:; connect-src 'self' https://api.stripe.com; frame-src https://checkout.stripe.com https://js.stripe.com; form-action 'self' https://checkout.stripe.com https://billing.stripe.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
