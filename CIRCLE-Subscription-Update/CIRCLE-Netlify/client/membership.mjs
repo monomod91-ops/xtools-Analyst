@@ -4,6 +4,7 @@ const shell = document.getElementById('membership'), root = document.getElementB
 const money = n => new Intl.NumberFormat('ja-JP', {style:'currency',currency:'JPY'}).format(n);
 const date = n => new Intl.DateTimeFormat('ja-JP',{year:'numeric',month:'long',day:'numeric'}).format(n);
 let plan, member, current, mode='login', appLoaded=false, busy=false, refreshTimer, rendering=false, notice=null;
+let authQueue=Promise.resolve(), lastAuthLocation;
 const nativeFetch = window.fetch.bind(window);
 // Refresh only the usage display; do not repeat X requests to update counters.
 window.fetch = async (...args) => {
@@ -144,11 +145,38 @@ async function initialize(authenticatedUser, requireSession=false) {
   member=verified;current=status;render();
 }
 async function start() {
+  // Email links can update only the fragment of an already open Safari tab.
+  // A pageshow event also covers a tab restored from the back/forward cache.
+  window.addEventListener('hashchange',()=>processAuthLocation());
+  window.addEventListener('pageshow',()=>processAuthLocation());
+  onAuthChange((event)=>{if(event==='LOGOUT'){root.hidden=true;member=null;current=null;render();}});
+  await processAuthLocation(true);
+}
+function processAuthLocation(initial=false) {
+  // Serialize SDK calls: the same one-use link must not be consumed twice when
+  // hashchange and pageshow arrive together, or while startup is still pending.
+  const task=authQueue.then(()=>loadAuthLocation(initial));
+  authQueue=task.catch(()=>{});
+  return task;
+}
+async function loadAuthLocation(initial) {
+  const href=location.href;
+  if(!initial&&href===lastAuthLocation)return;
+  lastAuthLocation=href;
+  let callback, callbackError;
+  try{callback=await handleAuthCallback();}catch(error){callbackError=error;}
+  if(!initial&&!callback&&!callbackError)return;
+  notice=null;
   try {
-    const callback=await handleAuthCallback();if(callback?.type==='recovery')mode='reset';
-    const pricingInfo=await api('plan');plan=pricingInfo.plan;
+    // Even an invalid/expired link must leave a usable login form, not a loader.
+    if(!plan){const pricingInfo=await api('plan');plan=pricingInfo.plan;}
+    if(callback?.type==='recovery')mode='reset';
+    if(callback?.type==='confirmation'||callback?.type==='oauth')mode='login';
+    if(callbackError){render();throw callbackError;}
     const signedIn=callback?.type==='confirmation'||callback?.type==='oauth';
     await initialize(signedIn?callback.user:undefined,signedIn);
+    if(callback?.type==='confirmation')message('メール認証が完了しました。');
+    if(!initial)return;
     const result=new URL(location.href).searchParams.get('payment');
     if(member&&['success','return'].includes(result)){
       message('お支払い状況を確認しています…');
@@ -156,7 +184,6 @@ async function start() {
       if(!current.active)message('お支払いの反映を待っています。少し待って「支払い状況を確認」を押してください。');
       history.replaceState(null,'','/');
     }else if(result==='cancelled')message('お申し込みを中断しました。');
-    onAuthChange((event)=>{if(event==='LOGOUT'){root.hidden=true;member=null;current=null;render();}});
   }catch(error){if(plan)render();message(error.message||'読み込みに失敗しました。ページを更新してください。',true);}
 }
 start();
