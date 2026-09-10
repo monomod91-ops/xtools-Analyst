@@ -1,0 +1,29 @@
+CIRCLE Subscription validation — 2026-09-10 UTC
+
+Command: node --test tests/*.test.mjs
+Result: 39 tests passed; 0 failed.
+
+New checks:
+- Current Stripe invoice format, without the removed paid boolean, grants paid access.
+- Missing or nonnumeric payment amounts cannot grant access.
+- Lost Checkout responses recover the same request after a service restart and a 30-minute boundary.
+- An expired unpaid Checkout can be replaced by a new request.
+
+Existing checks retained:
+- Monthly and global API caps, concurrent reservations and rollback.
+- Email-verified identity, CSRF, paid access, X binding and cross-member rejection.
+- Signed webhook handling, replay, renewal, cancellation and refund-before-payment.
+- X request caching, OAuth, conservative activity checks and operation locks.
+
+The two previously published migrations match their recorded GitHub blob SHAs.
+The membership migration matches the previously delivered ZIP byte-for-byte.
+Checkout request persistence is added in a separate migration.
+
+Limits: Tests use a mocked Stripe client and SQLite with serialized connections.
+Dependency installation/full build, Netlify PostgreSQL concurrency, real Identity,
+Stripe sandbox payment, and browser rendering have NOT been verified.
+This package has NOT been published. It is not accepting customer payments.
+
+Primary references:
+https://docs.stripe.com/changelog/basil/2025-03-31/add-support-for-multiple-partial-payments-on-invoices
+https://docs.stripe.com/api/idempotent_requests

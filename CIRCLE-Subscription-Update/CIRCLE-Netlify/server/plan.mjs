@@ -1,0 +1,42 @@
+export class BillingError extends Error {
+  constructor(status, message, code = 'billing_unavailable') {
+    super(message); Object.assign(this, {status, code});
+  }
+}
+export const PLAN = Object.freeze({
+  name: 'CIRCLE スタンダード', amount: 1980, currency: 'jpy', interval: 'month',
+  limits: Object.freeze({analysis: 100, list: 2, action: 20, link: 20})
+});
+// Worst-case request costs in 1/10,000 USD, not a promise of future X pricing.
+// list: 100 user objects; analysis: five posts; action: profile + five posts
+// + block + unblock; link: one users/me result. No automatic API retries.
+export const API_COST = Object.freeze({analysis: 250, list: 10000, action: 600, link: 100});
+export function billingConfig(env) {
+  const enabled = env.BILLING_ENABLED === 'true';
+  const configured = /^https:\/\/[^/]+$/.test(env.APP_ORIGIN || '') &&
+    /^(rk|sk)_(test|live)_/.test(env.STRIPE_SECRET_KEY || '') &&
+    /^whsec_/.test(env.STRIPE_WEBHOOK_SECRET || '') &&
+    /^price_/.test(env.STRIPE_PRICE_ID || '') && /^bpc_/.test(env.STRIPE_PORTAL_CONFIG_ID || '');
+  const live = env.STRIPE_MODE === 'live';
+  const keyMatches = (env.STRIPE_SECRET_KEY || '').includes(live ? '_live_' : '_test_');
+  const dailyCents = Number(env.CIRCLE_DAILY_API_BUDGET_CENTS || 1000);
+  return {enabled: enabled && !!configured && keyMatches && env.MERCHANT_DETAILS_CONFIRMED === 'true',
+    live, origin: env.APP_ORIGIN, priceId: env.STRIPE_PRICE_ID,
+    portalConfig: env.STRIPE_PORTAL_CONFIG_ID,
+    dailyUnits: Number.isSafeInteger(dailyCents) && dailyCents > 0 && dailyCents <= 100000 ? dailyCents * 100 : 100000,
+    apiPaused: env.CIRCLE_API_PAUSED === 'true',
+    integrationId: 'circle_membership_jqmrvska'};
+}
+export function requireMember(user) {
+  // getUser() is the verified Netlify Identity SDK result, never user_metadata.
+  if (!user?.id || !user.email || user.emailVerified !== true)
+    throw new BillingError(401, 'メール認証済みのアカウントでログインしてください。', 'login_required');
+  return {id: user.id, email: user.email};
+}
+export const billingJSON = (data, status = 200) => Response.json(data, {status, headers: {
+  'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff'
+}});
+export function billingFailure(error) {
+  return billingJSON({error: error instanceof BillingError ? error.message : '契約情報を確認できません。時間をおいて再度お試しください。',
+    code: error instanceof BillingError ? error.code : 'billing_unavailable'}, error instanceof BillingError ? error.status : 503);
+}

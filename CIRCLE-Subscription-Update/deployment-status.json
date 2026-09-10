@@ -1,0 +1,125 @@
+{
+  "service": "CIRCLE",
+  "public_origin": "https://marinqueen.com",
+  "membership_code_published": false,
+  "billing_accepting_customers": false,
+  "stripe": {
+    "account_id": "acct_1UBwLtRahIrkLsKY",
+    "account_name": "あきらそみや",
+    "livemode": true,
+    "product_id": "prod_circle_standard_monthly_v1",
+    "product_created_at": "2026-09-09T23:27:33.000Z",
+    "price_id": "price_1UDuttRahIrkLsKYWAjsCvY9",
+    "amount": 1980,
+    "currency": "jpy",
+    "interval": "month",
+    "interval_count": 1,
+    "usage_type": "licensed",
+    "tax_behavior": "inclusive",
+    "analysis_limit_per_period": 100,
+    "webhook_id": "we_1UDv5GRahIrkLsKYTfGtEyXh",
+    "webhook_status": "disabled",
+    "webhook_url": "https://marinqueen.com/api/billing/webhook",
+    "webhook_api_version": "2026-07-29.dahlia",
+    "portal_config_id": "bpc_1UDwHmRahIrkLsKYjcvRcZjm",
+    "sandbox_connected": false,
+    "checkout_write_permission": false,
+    "portal_config_write_permission": false,
+    "portal_configuration_verified": {
+      "active": true,
+      "livemode": true,
+      "cancel_at_period_end": true,
+      "payment_method_update": true,
+      "invoice_history": true,
+      "subscription_update": false
+    }
+  },
+  "netlify": {
+    "site_id": "ce467e89-a3bb-41b9-bbc2-0d9705885af8",
+    "site_name": "xtoolfoll",
+    "production_settings_verified": {
+      "STRIPE_PRICE_ID": "price_1UDuttRahIrkLsKYWAjsCvY9",
+      "STRIPE_MODE": "live",
+      "BILLING_ENABLED": "false",
+      "MERCHANT_DETAILS_CONFIRMED": "true",
+      "STRIPE_PORTAL_CONFIG_ID": "bpc_1UDwHmRahIrkLsKYjcvRcZjm"
+    },
+    "webhook_secret_saved_as_function_secret": true,
+    "stripe_runtime_key_configured": true,
+    "stripe_portal_config_configured": true,
+    "nonproduction_stripe_mode": "test",
+    "portal_and_runtime_key_last_checked_at": "2026-09-10T01:04:51.416669+00:00",
+    "stripe_runtime_key_value_verified": false,
+    "stripe_runtime_key_observed_scopes": [
+      "builds",
+      "functions",
+      "runtime"
+    ],
+    "stripe_runtime_key_nonempty_contexts": [
+      "branch-deploy",
+      "deploy-preview",
+      "production",
+      "dev-server"
+    ],
+    "runtime_key_scope_review_pending": true,
+    "runtime_key_last_checked_at": "2026-09-10T01:11:58.792399+00:00",
+    "merchant_confirmation_setting_verified_at": "2026-09-10T01:24:20.129471+00:00"
+  },
+  "remaining": [
+    "Grant Checkout Sessions and Customer Portal write permissions through Stripe's authorization flow.",
+    "Restore the GitHub integration's authorized write access to monomod91-ops/xtools-Analyst.",
+    "Install the pinned dependencies and validate the real Netlify Identity and Stripe SDK build.",
+    "Enable and verify Netlify Identity; the supplied merchant information is complete and its business address has been confirmed by the owner.",
+    "Verify the saved restricted Stripe runtime key and restrict its application to production Functions; the customer portal configuration is saved to Netlify.",
+    "Verify sandbox signup, payment, signed webhook, quota, cancellation and refund behavior.",
+    "Deploy the membership code; enable the staged webhook only after its receiver is ready and validated.",
+    "Enable billing only after the production configuration and X API funding are ready."
+  ],
+  "last_checked_utc_date": "2026-09-10",
+  "github": {
+    "repository": "monomod91-ops/xtools-Analyst",
+    "last_checked_main_commit": "c7ab4c3901066f391af3be1948fbbf0bc5a2a17e",
+    "accessible_installations": 0,
+    "membership_update_written": false,
+    "permission_last_checked_at": "2026-09-10T01:23:40.183695+00:00"
+  },
+  "validation": {
+    "local_node_tests_passed": 39,
+    "local_node_tests_failed": 0,
+    "stripe_current_invoice_shape_checked": true,
+    "lost_checkout_response_recovery_checked": true,
+    "full_build_verified": false,
+    "live_payment_verified": false,
+    "identity_integration_verified": false,
+    "postgresql_integration_verified": false,
+    "browser_verified": false
+  },
+  "local_changes": [
+    "Use invoice.status and numeric amount_paid instead of the removed invoice.paid field.",
+    "Persist Checkout request id and exact parameters before calling Stripe; recover the same session after a lost response.",
+    "Add a separate checkout request migration without changing previous migration files."
+  ],
+  "merchant": {
+    "supplied_fields": [
+      "businessName",
+      "supportEmail",
+      "address",
+      "phone"
+    ],
+    "representative_uses_supplied_name": true,
+    "missing_fields": [],
+    "confirmed": true,
+    "published": false,
+    "address_completeness": "street_address_provided",
+    "address_display_method_confirmed": true,
+    "reference_urls": [
+      "https://www.no-trouble.caa.go.jp/what/mailorder/advertising.html",
+      "https://www.no-trouble.caa.go.jp/what/mailorder/"
+    ],
+    "business_address_usage_confirmed": true,
+    "address_source": "user-provided webarchive",
+    "confirmation_source": "User confirmed the supplied address is contracted for use as the CIRCLE business address.",
+    "confirmation_recorded_at": "2026-09-10T01:23:40.183681+00:00",
+    "netlify_production_confirmation_saved": true
+  }
+}
