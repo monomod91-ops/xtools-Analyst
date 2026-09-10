@@ -1,4 +1,5 @@
-import {getUser} from '@netlify/identity';
+import {getUser, admin} from '@netlify/identity';
+import {getMemberIdentity} from '../../server/identity.mjs';
 import {billingRuntime} from '../../server/billing-runtime.mjs';
 import {billingConfig, billingFailure, billingJSON, PLAN} from '../../server/plan.mjs';
 export default async function handler(request) {
@@ -9,7 +10,7 @@ export default async function handler(request) {
   try {
     const runtime = billingRuntime(env);
     const webhook = new URL(request.url).pathname === '/api/billing/webhook';
-    const user = webhook ? null : await getUser();
+    const user = webhook ? null : await getMemberIdentity({getUser, admin});
     return runtime.service.handle(request, user);
   } catch (error) { return billingFailure(error); }
 }
