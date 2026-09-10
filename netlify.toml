@@ -1,5 +1,5 @@
 [build]
-  base = "CIRCLE-Netlify"
+  ba  base = "CIRCLE-Subscription-Update/CIRCLE-Netlify"
   command = "npm run build"
   publish = "public"
   functions = "netlify/functions"
