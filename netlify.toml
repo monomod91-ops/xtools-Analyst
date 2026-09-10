@@ -1,6 +1,18 @@
 [build]
-base = "CIRCLE-Subscription-Update/CIRCLE-Netlify"
-  command = "npm run build"
+  base = "CIRCLE-Subscription-Update/CIRCLE-Netlify"
+  # Apply the X OAuth files already uploaded inside the active base.
+  # Until these files are moved to their canonical paths, edit the copies in
+  # CIRCLE-X-OAuth-Diagnostics. Restore "npm run build" after that move.
+  command = '''
+set -eu
+for circle_patch_file in server/core.mjs server/handler.mjs server/oauth-result.mjs netlify/functions/x.mjs public/assets/circle-app.js tests/core.test.mjs tests/oauth-result.test.mjs; do
+  test -f "CIRCLE-X-OAuth-Diagnostics/$circle_patch_file"
+done
+for circle_patch_file in server/core.mjs server/handler.mjs server/oauth-result.mjs netlify/functions/x.mjs public/assets/circle-app.js tests/core.test.mjs tests/oauth-result.test.mjs; do
+  cp "CIRCLE-X-OAuth-Diagnostics/$circle_patch_file" "$circle_patch_file"
+done
+npm run build
+'''
   publish = "public"
   functions = "netlify/functions"
 [build.environment]
