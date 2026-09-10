@@ -3,7 +3,7 @@ import {login, signup, logout, getUser, handleAuthCallback, requestPasswordRecov
 const shell = document.getElementById('membership'), root = document.getElementById('root');
 const money = n => new Intl.NumberFormat('ja-JP', {style:'currency',currency:'JPY'}).format(n);
 const date = n => new Intl.DateTimeFormat('ja-JP',{year:'numeric',month:'long',day:'numeric'}).format(n);
-let plan, member, current, mode='login', appLoaded=false, busy=false, refreshTimer, rendering=false;
+let plan, member, current, mode='login', appLoaded=false, busy=false, refreshTimer, rendering=false, notice=null;
 const nativeFetch = window.fetch.bind(window);
 // Refresh only the usage display; do not repeat X requests to update counters.
 window.fetch = async (...args) => {
@@ -20,15 +20,24 @@ function el(tag, text, className) {
 function button(text, action, style='circle-button') {
   const b=el('button',text,style);b.type='button';b.addEventListener('click',()=>run(action,b));return b;
 }
-function message(text, error=false) {
+function showNotice() {
+  if(!notice)return;
   let box=document.getElementById('circle-notice');
-  if(!box){box=el('p');box.id='circle-notice';shell.prepend(box);}
-  box.className=error?'circle-notice circle-error':'circle-notice';box.setAttribute('role',error?'alert':'status');box.textContent=text;
+  if(!box){box=el('p');box.id='circle-notice';(shell.querySelector('.circle-auth')||shell).prepend(box);}
+  box.className=notice.error?'circle-notice circle-error':'circle-notice';
+  box.setAttribute('role',notice.error?'alert':'status');box.textContent=notice.text;
+  return box;
+}
+function message(text, error=false) {
+  notice={text,error};const box=showNotice();
+  if(box){box.tabIndex=-1;box.focus({preventScroll:true});box.scrollIntoView({block:'center'});}
 }
 async function run(action, b) {
-  if(busy)return;busy=true;if(b)b.disabled=true;
+  if(busy)return;busy=true;notice=null;document.getElementById('circle-notice')?.remove();
+  const label=b?.textContent;
+  if(b){b.disabled=true;if(b.type==='submit')b.textContent=mode==='login'?'ログイン中…':'処理中…';}
   try{await action();}catch(error){message(error.message||'処理できませんでした。時間をおいて再度お試しください。',true);}
-  finally{busy=false;if(b)b.disabled=false;}
+  finally{busy=false;if(b){b.disabled=false;b.textContent=label;}}
 }
 async function api(route, post=false) {
   const response=await nativeFetch('/api/billing/'+route,{method:post?'POST':'GET',credentials:'same-origin',
@@ -88,7 +97,7 @@ function form() {
     if(recovery){await requestPasswordRecovery(email.value.trim());message('登録済みのメールアドレスへ再設定の案内を送信します。');return;}
     if(reset){await updateUser({password:password.value});mode='login';await initialize();return;}
     if(register){await signup(email.value.trim(),password.value);message('確認メールを送信しました。メール内のリンクを開いて登録を完了してください。');return;}
-    await login(email.value.trim(),password.value);await initialize();
+    const user=await login(email.value.trim(),password.value);await initialize(user,true);
   },submit);});
   panel.append(f);
   if(!reset){panel.append(button(register||recovery?'ログインに戻る':'はじめての方はこちら',()=>{mode=register||recovery?'login':'signup';render();},'circle-link'));
@@ -118,23 +127,28 @@ function render() {
   } else {
     root.hidden=true;const main=el('main',undefined,'circle-membership-grid');main.append(pricing(),form());shell.append(main,legalLinks());
   }
-  rendering=false;
+  showNotice();rendering=false;
 }
 async function refreshStatus() {
   if(!member)return;
   try {current=await api('status');render();}
   catch(error){if(error.status===401){root.hidden=true;member=null;current=null;render();}throw error;}
 }
-async function initialize() {
-  member=await getUser();
-  if(member?.emailVerified!==true)member=null;
-  current=member?await api('status'):null;render();
+async function initialize(authenticatedUser, requireSession=false) {
+  const user=authenticatedUser??await getUser();
+  if(requireSession&&!user)throw Error('ログイン情報を保持できませんでした。ページを更新してから再度ログインしてください。');
+  if(requireSession&&user.emailVerified!==true)throw Error('メール認証の完了を確認できませんでした。認証済みの場合は、ページを更新して再度ログインしてください。');
+  const verified=user?.emailVerified===true?user:null;
+  // The server must independently accept the session before showing membership access.
+  const status=verified?await api('status'):null;
+  member=verified;current=status;render();
 }
 async function start() {
   try {
-    const pricingInfo=await api('plan');plan=pricingInfo.plan;
     const callback=await handleAuthCallback();if(callback?.type==='recovery')mode='reset';
-    await initialize();
+    const pricingInfo=await api('plan');plan=pricingInfo.plan;
+    const signedIn=callback?.type==='confirmation'||callback?.type==='oauth';
+    await initialize(signedIn?callback.user:undefined,signedIn);
     const result=new URL(location.href).searchParams.get('payment');
     if(member&&['success','return'].includes(result)){
       message('お支払い状況を確認しています…');
