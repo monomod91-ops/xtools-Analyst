@@ -138,11 +138,15 @@ async function refreshStatus() {
 async function initialize(authenticatedUser, requireSession=false) {
   const user=authenticatedUser??await getUser();
   if(requireSession&&!user)throw Error('ログイン情報を保持できませんでした。ページを更新してから再度ログインしてください。');
-  if(requireSession&&user.emailVerified!==true)throw Error('メール認証の完了を確認できませんでした。認証済みの場合は、ページを更新して再度ログインしてください。');
-  const verified=user?.emailVerified===true?user:null;
-  // The server must independently accept the session before showing membership access.
-  const status=verified?await api('status'):null;
-  member=verified;current=status;render();
+  // The server validates the signed session and email confirmation itself.
+  // A missing/stale browser-side flag must not prevent that authoritative check.
+  let status=null;
+  try{if(user)status=await api('status');}
+  catch(error){
+    if(error.status===401){member=null;current=null;root.hidden=true;}
+    throw error;
+  }
+  member=user;current=status;render();
 }
 async function start() {
   // Email links can update only the fragment of an already open Safari tab.
