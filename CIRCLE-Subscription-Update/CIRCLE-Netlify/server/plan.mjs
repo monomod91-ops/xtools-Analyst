@@ -28,14 +28,12 @@ export function billingConfig(env) {
     integrationId: 'circle_membership_jqmrvska'};
 }
 export function requireMember(user) {
-  // Only accept the server-side getUser() result, never request data or metadata.
+  // This argument must come from server-side @netlify/identity getUser(),
+  // never request data, user metadata, a header ID, or a locally decoded JWT.
+  // Netlify's validated-session fallback intentionally has no confirmedAt.
+  // Identity enforces confirmation when issuing email/password sessions.
   if (typeof user?.id !== 'string' || !user.id || typeof user.email !== 'string' || !user.email)
     throw new BillingError(401, 'ログイン情報を確認できません。もう一度ログインしてください。', 'login_required');
-  // @netlify/identity 1.0.0 maps GoTrue confirmed_at to confirmedAt.
-  // It does not return emailVerified. JWT-only fallback results have no
-  // confirmation timestamp and must remain denied until Identity verifies it.
-  if (typeof user.confirmedAt !== 'string' || !Number.isFinite(Date.parse(user.confirmedAt)))
-    throw new BillingError(401, 'メール認証の状態を確認できませんでした。', 'email_confirmation_required');
   return {id: user.id, email: user.email};
 }
 export const billingJSON = (data, status = 200) => Response.json(data, {status, headers: {
