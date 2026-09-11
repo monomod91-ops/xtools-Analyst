@@ -1,6 +1,6 @@
 [build]
-command = command = "cp -R CIRCLE-X-OAuth-Diagnostics/server/. server/ && cp -R CIRCLE-X-OAuth-Diagnostics/netlify/. netlify/ && cp -R CIRCLE-X-OAuth-Diagnostics/public/. public/ && cp -R CIRCLE-X-OAuth-Diagnostics/tests/. tests/ && cp -R ../../CIRCLE-4Plans-Update/CIRCLE-X-OAuth-Diagnostics/. . && npm run build"
-  publish = "public"
+command =command = "cp -R CIRCLE-X-OAuth-Diagnostics/server/. server/ && cp -R CIRCLE-X-OAuth-Diagnostics/netlify/. netlify/ && cp -R CIRCLE-X-OAuth-Diagnostics/public/. public/ && cp -R CIRCLE-X-OAuth-Diagnostics/tests/. tests/ && cp -R ../../CIRCLE-4Plans-Update/CIRCLE-X-OAuth-Diagnostics/. . && npm run build"
+publish= "public"
   functions = "netlify/functions"
 [build.environment]
   NODE_VERSION = "22"
