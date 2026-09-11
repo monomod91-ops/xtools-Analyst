@@ -1,0 +1,16 @@
+[build]
+command = "cp -R CIRCLE-X-OAuth-Diagnostics/server/. server/ && cp -R CIRCLE-X-OAuth-Diagnostics/netlify/. netlify/ && cp -R CIRCLE-X-OAuth-Diagnostics/public/. public/ && cp -R CIRCLE-X-OAuth-Diagnostics/tests/. tests/ && cp -R ../../CIRCLE-4Plans-Update/CIRCLE-X-OAuth-Diagnostics/. . && cp -R ../../CIRCLE-4Plans-Update-2/CIRCLE-X-OAuth-Diagnostics/. . && npm run build"
+publish= "public"
+  functions = "netlify/functions"
+[build.environment]
+  NODE_VERSION = "22"
+[functions]
+  node_bundler = "esbuild"
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "no-referrer"
+    X-Frame-Options = "DENY"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' https://js.stripe.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://pbs.twimg.com; font-src 'self' data:; connect-src 'self' https://api.stripe.com; frame-src https://checkout.stripe.com https://js.stripe.com; form-action 'self' https://checkout.stripe.com https://billing.stripe.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
